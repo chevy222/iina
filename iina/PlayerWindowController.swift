@@ -40,13 +40,6 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
   // Cached user defaults values
   internal lazy var followGlobalSeekTypeWhenAdjustSlider: Bool = Preference.bool(for: .followGlobalSeekTypeWhenAdjustSlider)
   internal lazy var useExactSeek: Preference.SeekOption = Preference.enum(for: .useExactSeek)
-  internal lazy var relativeSeekAmount: Int = Preference.integer(for: .relativeSeekAmount)
-  internal lazy var volumeScrollAmount: Int = Preference.integer(for: .volumeScrollAmount)
-  internal lazy var playbackSpeedScrollAmount: Int = Preference.integer(for: .playbackSpeedScrollAmount)
-  internal lazy var singleClickAction: Preference.MouseClickAction = Preference.enum(for: .singleClickAction)
-  internal lazy var doubleClickAction: Preference.MouseClickAction = Preference.enum(for: .doubleClickAction)
-  internal lazy var horizontalScrollAction: Preference.ScrollAction = Preference.enum(for: .horizontalScrollAction)
-  internal lazy var verticalScrollAction: Preference.ScrollAction = Preference.enum(for: .verticalScrollAction)
   
   internal var observedPrefKeys: [Preference.Key] = [
     .enableToneMapping,
@@ -58,13 +51,6 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     .alwaysFloatOnTop,
     .maxVolume,
     .useExactSeek,
-    .relativeSeekAmount,
-    .volumeScrollAmount,
-    .playbackSpeedScrollAmount,
-    .singleClickAction,
-    .doubleClickAction,
-    .horizontalScrollAction,
-    .verticalScrollAction,
     .playlistShowMetadata,
     .playlistShowMetadataInMusicMode,
     .autoSwitchToMusicMode,
@@ -104,26 +90,6 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
       if let newValue = change[.newKey] as? Int {
         useExactSeek = Preference.SeekOption(rawValue: newValue)!
       }
-    case PK.relativeSeekAmount.rawValue:
-      if let newValue = change[.newKey] as? Int {
-        relativeSeekAmount = newValue.clamped(to: 1...5)
-      }
-    case PK.volumeScrollAmount.rawValue:
-      if let newValue = change[.newKey] as? Int {
-        volumeScrollAmount = newValue.clamped(to: 1...4)
-      }
-    case PK.playbackSpeedScrollAmount.rawValue:
-      if let newValue = change[.newKey] as? Int {
-        playbackSpeedScrollAmount = newValue.clamped(to: 1...4)
-      }
-    case PK.singleClickAction.rawValue:
-      if let newValue = change[.newKey] as? Int {
-        singleClickAction = Preference.MouseClickAction(rawValue: newValue)!
-      }
-    case PK.doubleClickAction.rawValue:
-      if let newValue = change[.newKey] as? Int {
-        doubleClickAction = Preference.MouseClickAction(rawValue: newValue)!
-      }
     case PK.playlistShowMetadata.rawValue, PK.playlistShowMetadataInMusicMode.rawValue:
       if player.isPlaylistVisible {
         player.mainWindow.playlistView.playlistTableView.reloadData()
@@ -146,21 +112,6 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
   internal var singleClickTimer: Timer?
   internal var mouseExitEnterCount = 0
 
-  // Scroll direction
-
-  /** The direction of current scrolling event. */
-  enum ScrollDirection {
-    case horizontal
-    case vertical
-  }
-
-  internal var scrollDirection: ScrollDirection?
-
-  /** We need to pause the video when a user starts seeking by scrolling.
-   This property records whether the video is paused initially so we can
-   recover the status when scrolling finished. */
-  private var wasPlayingBeforeSeeking = false
-  
   /** Subclasses should set these value to true if the mouse is in some
    special views (e.g. volume slider, play slider) before calling
    `super.scrollWheel()` and set them back to false after calling
@@ -372,21 +323,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     PluginInputManager.handle(
       input: PluginInputManager.Input.mouse, event: .mouseUp, player: player,
       arguments: mouseEventArgs(event), defaultHandler: { [self] in
-      // default handler
-      if event.clickCount == 1 {
-        if doubleClickAction == .none {
-          performMouseAction(singleClickAction)
-        } else {
-          singleClickTimer = Timer.scheduledTimer(timeInterval: NSEvent.doubleClickInterval, target: self, selector: #selector(performMouseActionLater), userInfo: singleClickAction, repeats: false)
-          mouseExitEnterCount = 0
-        }
-      } else if event.clickCount == 2 {
-        if let timer = singleClickTimer {
-          timer.invalidate()
-          singleClickTimer = nil
-        }
-        performMouseAction(doubleClickAction)
-      }
+      self.handleMappedLeftMouseEvent(event)
     })
   }
 
@@ -411,7 +348,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     PluginInputManager.handle(
       input: PluginInputManager.Input.rightMouse, event: .mouseUp, player: player,
       arguments: mouseEventArgs(event), defaultHandler: {
-      self.performMouseAction(Preference.enum(for: .rightClickAction))
+      _ = self.handleInputBinding("MBTN_RIGHT")
     })
   }
 
@@ -421,12 +358,70 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     PluginInputManager.handle(
       input: PluginInputManager.Input.otherMouse, event: .mouseUp, player: player,
       arguments: mouseEventArgs(event), defaultHandler: {
-      if event.type == .otherMouseUp {
-        self.performMouseAction(Preference.enum(for: .middleClickAction))
-      } else {
+      guard let input = self.mpvMouseButtonName(for: event.buttonNumber) else {
         super.otherMouseUp(with: event)
+        return
       }
+      _ = self.handleInputBinding(input)
     })
+  }
+
+  private func handleMappedLeftMouseEvent(_ event: NSEvent) {
+    let hasDoubleClickBinding = PlayerCore.keyBindings["MBTN_LEFT_DBL"] != nil
+
+    if event.clickCount == 1 {
+      if hasDoubleClickBinding {
+        singleClickTimer?.invalidate()
+        singleClickTimer = Timer.scheduledTimer(timeInterval: NSEvent.doubleClickInterval,
+                                                target: self,
+                                                selector: #selector(dispatchPendingLeftClick),
+                                                userInfo: nil,
+                                                repeats: false)
+        mouseExitEnterCount = 0
+      } else {
+        _ = handleInputBinding("MBTN_LEFT")
+      }
+      return
+    }
+
+    guard event.clickCount == 2 else { return }
+    singleClickTimer?.invalidate()
+    singleClickTimer = nil
+    if !handleInputBinding("MBTN_LEFT_DBL") {
+      _ = handleInputBinding("MBTN_LEFT")
+    }
+  }
+
+  @objc private func dispatchPendingLeftClick() {
+    singleClickTimer = nil
+    _ = handleInputBinding("MBTN_LEFT")
+  }
+
+  private func handleInputBinding(_ input: String) -> Bool {
+    guard let keyBinding = PlayerCore.keyBindings[input] else { return false }
+    return handleKeyBinding(keyBinding)
+  }
+
+  private func mpvMouseButtonName(for buttonNumber: Int) -> String? {
+    switch buttonNumber {
+    case 2:
+      return "MBTN_MID"
+    case 3:
+      return "MBTN_FORWARD"
+    case 4:
+      return "MBTN_BACK"
+    default:
+      return nil
+    }
+  }
+
+  private func dispatchWheelBinding(_ input: String, delta: CGFloat) {
+    guard delta != 0 else { return }
+
+    let dispatchCount = max(1, Int(abs(delta).rounded(.awayFromZero)))
+    for _ in 0..<dispatchCount {
+      _ = handleInputBinding(input)
+    }
   }
 
   internal func performMouseAction(_ action: Preference.MouseClickAction) {
@@ -439,104 +434,21 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
   }
   
   override func scrollWheel(with event: NSEvent) {
-    let isMouse = event.phase.isEmpty
-    let isTrackpadBegan = event.phase.contains(.began)
-    let isTrackpadEnd = event.phase.contains(.ended)
-
-    // determine direction
-
-    if isMouse || isTrackpadBegan {
-      if event.scrollingDeltaX != 0 {
-        scrollDirection = .horizontal
-      } else if event.scrollingDeltaY != 0 {
-        scrollDirection = .vertical
-      }
-    } else if isTrackpadEnd {
-      scrollDirection = nil
-    }
-
-    let scrollAction: Preference.ScrollAction
-    if seekOverride {
-      scrollAction = .seek
-    } else if volumeOverride {
-      scrollAction = .volume
-    } else {
-      scrollAction = scrollDirection == .horizontal ? horizontalScrollAction : verticalScrollAction
-      // show volume popover when volume seek begins and hide on end
-      if let miniPlayer = self as? MiniPlayerWindowController, scrollAction == .volume {
-        miniPlayer.handleVolumePopover(isTrackpadBegan, isTrackpadEnd, isMouse)
-      }
-    }
-
-    // pause video when seek begins
-
-    if scrollAction == .seek && isTrackpadBegan {
-      // record pause status
-      if player.info.state == .playing {
-        player.pause()
-        wasPlayingBeforeSeeking = true
-      }
-    }
-
-    if isTrackpadEnd && wasPlayingBeforeSeeking {
-      // only resume playback when it was playing before seeking
-      if wasPlayingBeforeSeeking {
-        player.resume()
-      }
-      wasPlayingBeforeSeeking = false
-    }
-
-    // handle the delta value
-
-    let isPrecise = event.hasPreciseScrollingDeltas
     let isNatural = event.isDirectionInvertedFromDevice
+    let deltaX = isNatural ? event.scrollingDeltaX : -event.scrollingDeltaX
+    let deltaY = isNatural ? -event.scrollingDeltaY : event.scrollingDeltaY
 
-    var deltaX = isPrecise ? Double(event.scrollingDeltaX) : event.scrollingDeltaX.unifiedDouble
-    var deltaY = isPrecise ? Double(event.scrollingDeltaY) : event.scrollingDeltaY.unifiedDouble * 2
-
-    if isNatural {
-      deltaY = -deltaY
+    if abs(deltaY) >= abs(deltaX) {
+      dispatchWheelBinding(deltaY > 0 ? "WHEEL_UP" : "WHEEL_DOWN", delta: deltaY)
+      if deltaX != 0 {
+        dispatchWheelBinding(deltaX > 0 ? "WHEEL_RIGHT" : "WHEEL_LEFT", delta: deltaX)
+      }
     } else {
-      deltaX = -deltaX
+      dispatchWheelBinding(deltaX > 0 ? "WHEEL_RIGHT" : "WHEEL_LEFT", delta: deltaX)
+      if deltaY != 0 {
+        dispatchWheelBinding(deltaY > 0 ? "WHEEL_UP" : "WHEEL_DOWN", delta: deltaY)
+      }
     }
-
-    let delta = scrollDirection == .horizontal ? deltaX : deltaY
-
-    // perform action
-    
-    switch scrollAction {
-    case .seek:
-      let seekAmount = (isMouse ? AppData.seekAmountMapMouse : AppData.seekAmountMap)[relativeSeekAmount] * delta
-      player.seek(relativeSecond: seekAmount, option: useExactSeek)
-    case .volume:
-      // don't use precised delta for mouse
-      let newVolume = player.info.volume + (isMouse ? delta : AppData.volumeMap[volumeScrollAmount] * delta)
-      player.setVolume(newVolume)
-      volumeSlider.doubleValue = newVolume
-    case .playbackSpeed:
-      let min = 0.05
-      let max = 4.0
-      let newSpeed = round(1000 * (player.info.playSpeed + (player.info.playSpeed * AppData.playbackSpeedMap[playbackSpeedScrollAmount] * delta)).clamped(to: min...max)) / 1000
-      player.setSpeed(newSpeed)
-    default:
-      break
-    }
-  }
-
-  /**
-   Being called to perform single click action after timeout.
-
-   - SeeAlso:
-   mouseUp(with:)
-   */
-  @objc internal func performMouseActionLater(_ timer: Timer) {
-    guard let action = timer.userInfo as? Preference.MouseClickAction else { return }
-    if mouseExitEnterCount >= 2 && action == .hideOSC {
-      // the counter being greater than or equal to 2 means that the mouse re-entered the window
-      // `showUI()` must be called due to the movement in the window, thus `hideOSC` action should be cancelled
-      return
-    }
-    performMouseAction(action)
   }
   
   // MARK: - Window delegate: Activeness status
