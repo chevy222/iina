@@ -24,19 +24,39 @@ class PrefControlViewController: PreferenceViewController, PreferenceWindowEmbed
   }
 
   override var sectionViews: [NSView] {
-    return [sectionTrackpadView, sectionMouseView]
+    return [sectionMouseView, sectionTrackpadView]
   }
 
   @IBOutlet var sectionTrackpadView: NSView!
   @IBOutlet var sectionMouseView: NSView!
 
-  @IBOutlet weak var forceTouchLabel: NSTextField!
-  @IBOutlet weak var scrollVerticallyLabel: NSTextField!
-
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    forceTouchLabel.widthAnchor.constraint(equalTo: scrollVerticallyLabel.widthAnchor, multiplier: 1).isActive = true
-  }
+    guard
+      let acceptsFirstMouseButton = sectionMouseView.subviews.first(where: { $0 is NSButton && !($0 is NSPopUpButton) }),
+      let mouseImageContainer = sectionMouseView.subviews.first(where: {
+        $0.subviews.first is NSImageView
+      })
+    else { return }
 
+    sectionMouseView.subviews
+      .filter { $0 != acceptsFirstMouseButton && $0 != mouseImageContainer }
+      .forEach { $0.removeFromSuperview() }
+
+    sectionMouseView.removeConstraints(sectionMouseView.constraints)
+    acceptsFirstMouseButton.translatesAutoresizingMaskIntoConstraints = false
+    mouseImageContainer.translatesAutoresizingMaskIntoConstraints = false
+
+    NSLayoutConstraint.activate([
+      mouseImageContainer.leadingAnchor.constraint(equalTo: sectionMouseView.leadingAnchor),
+      mouseImageContainer.topAnchor.constraint(equalTo: sectionMouseView.topAnchor),
+      acceptsFirstMouseButton.leadingAnchor.constraint(equalTo: mouseImageContainer.trailingAnchor, constant: 20),
+      acceptsFirstMouseButton.centerYAnchor.constraint(equalTo: mouseImageContainer.centerYAnchor),
+      sectionMouseView.bottomAnchor.constraint(equalTo: acceptsFirstMouseButton.bottomAnchor, constant: 18),
+      sectionMouseView.trailingAnchor.constraint(greaterThanOrEqualTo: acceptsFirstMouseButton.trailingAnchor, constant: 8),
+    ])
+
+    sectionMouseView.frame.size.height = 56
+  }
 }
