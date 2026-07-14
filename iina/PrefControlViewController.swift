@@ -30,13 +30,16 @@ class PrefControlViewController: PreferenceViewController, PreferenceWindowEmbed
   @IBOutlet var sectionTrackpadView: NSView!
   @IBOutlet var sectionMouseView: NSView!
 
-  @IBOutlet weak var forceTouchLabel: NSTextField!
-  @IBOutlet weak var scrollVerticallyLabel: NSTextField!
-
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    forceTouchLabel.widthAnchor.constraint(equalTo: scrollVerticallyLabel.widthAnchor, multiplier: 1).isActive = true
+    // Remove mouse/scroll action controls from the Mouse section.
+    // Only keep the "accepts first mouse" checkbox, "seek type" popup + label + description,
+    // and the mouse image container (identified via XIB `identifier="keep"`).
+    let keepIdentifiers: Set<String> = ["keep", "SectionTitleMouse"]
+    sectionMouseView.subviews
+      .filter { !keepIdentifiers.contains($0.identifier?.rawValue ?? "") }
+      .forEach { $0.removeFromSuperview() }
   }
 
 }

@@ -53,28 +53,9 @@ class SettingsPageControl: SettingsPage {
   private func sectionMouse() -> SettingsSection {
     return section {
       SettingsList(title: .text_Mouse) {
-        SettingsItem.PopupButton()
-          .bindTo(.singleClickAction, ofType: Preference.MouseClickAction.self)
-          .availableTags([0, 2, 3])
-          .image(name: ["pointer.arrow.click", "cursorarrow.click"])
-        SettingsItem.PopupButton()
-          .bindTo(.doubleClickAction, ofType: Preference.MouseClickAction.self)
-          .availableTags([0, 1, 2, 4, 5, 6])
-        SettingsItem.PopupButton()
-          .bindTo(.rightClickAction, ofType: Preference.MouseClickAction.self)
-          .availableTags([0, 2, 3, 4, 5, 6])
-        SettingsItem.PopupButton()
-          .bindTo(.middleClickAction, ofType: Preference.MouseClickAction.self)
         SettingsItem.Switch()
           .bindTo(.videoViewAcceptsFirstMouse)
           .image(name: ["macwindow.and.pointer.arrow", "macwindow.and.cursorarrow"])
-      }
-      SettingsList {
-        SettingsItem.PopupButton()
-          .bindTo(.verticalScrollAction, ofType: Preference.ScrollAction.self)
-          .image(name: "magicmouse.fill")
-        SettingsItem.PopupButton()
-          .bindTo(.horizontalScrollAction, ofType: Preference.ScrollAction.self)
       }
       SettingsList {
         SettingsItem.PopupButton()

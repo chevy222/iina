@@ -124,6 +124,14 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
       if let newValue = change[.newKey] as? Int {
         doubleClickAction = Preference.MouseClickAction(rawValue: newValue)!
       }
+    case PK.horizontalScrollAction.rawValue:
+      if let newValue = change[.newKey] as? Int {
+        horizontalScrollAction = Preference.ScrollAction(rawValue: newValue)!
+      }
+    case PK.verticalScrollAction.rawValue:
+      if let newValue = change[.newKey] as? Int {
+        verticalScrollAction = Preference.ScrollAction(rawValue: newValue)!
+      }
     case PK.autoSwitchToMusicMode.rawValue:
       player.overrideAutoSwitchToMusicMode = false
     default:
@@ -293,6 +301,24 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     }
   }
 
+  /// Attempts to dispatch a mouse button event to an mpv input.conf binding.
+  /// Returns true if a binding was found and handled; false if no binding exists,
+  /// in which case the caller should fall back to IINA's preference-based logic.
+  private func handleInputBinding(_ input: String) -> Bool {
+    guard let keyBinding = PlayerCore.keyBindings[input] else { return false }
+    return handleKeyBinding(keyBinding)
+  }
+
+  /// Maps macOS mouse button numbers to mpv button names.
+  private func mpvMouseButtonName(for buttonNumber: Int) -> String? {
+    switch buttonNumber {
+    case 2: return "MBTN_MID"
+    case 3: return "MBTN_FORWARD"
+    case 4: return "MBTN_BACK"
+    default: return nil
+    }
+  }
+
   func abLoop() {
     player.abLoop()
     syncSlider()
@@ -369,7 +395,28 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     PluginInputManager.handle(
       input: PluginInputManager.Input.mouse, event: .mouseUp, player: player,
       arguments: mouseEventArgs(event), defaultHandler: { [self] in
-      // default handler
+      // Priority: mpv binding
+      if event.clickCount == 2 {
+        if self.handleInputBinding("MBTN_LEFT_DBL") { return }
+        // No DBL binding: fall back to single-click binding
+        if self.handleInputBinding("MBTN_LEFT") { return }
+      } else {
+        // Single click: if a DBL binding exists, defer to distinguish single vs double; otherwise dispatch immediately
+        if PlayerCore.keyBindings["MBTN_LEFT_DBL"] != nil {
+          singleClickTimer?.invalidate()
+          singleClickTimer = Timer.scheduledTimer(
+            timeInterval: NSEvent.doubleClickInterval,
+            target: self,
+            selector: #selector(dispatchPendingLeftClick),
+            userInfo: singleClickAction,
+            repeats: false)
+          mouseExitEnterCount = 0
+          return  // Wait for timer, do not execute now
+        }
+        if self.handleInputBinding("MBTN_LEFT") { return }
+      }
+
+      // Fallback: original IINA preference logic
       if event.clickCount == 1 {
         if doubleClickAction == .none {
           performMouseAction(singleClickAction)
@@ -408,7 +455,9 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     PluginInputManager.handle(
       input: PluginInputManager.Input.rightMouse, event: .mouseUp, player: player,
       arguments: mouseEventArgs(event), defaultHandler: {
-      self.performMouseAction(Preference.enum(for: .rightClickAction))
+      if !self.handleInputBinding("MBTN_RIGHT") {
+        self.performMouseAction(Preference.enum(for: .rightClickAction))
+      }
     })
   }
 
@@ -418,11 +467,14 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     PluginInputManager.handle(
       input: PluginInputManager.Input.otherMouse, event: .mouseUp, player: player,
       arguments: mouseEventArgs(event), defaultHandler: {
-      if event.type == .otherMouseUp {
-        self.performMouseAction(Preference.enum(for: .middleClickAction))
-      } else {
+      guard event.type == .otherMouseUp else {
         super.otherMouseUp(with: event)
+        return
       }
+      if let input = self.mpvMouseButtonName(for: event.buttonNumber) {
+        if self.handleInputBinding(input) { return }
+      }
+      self.performMouseAction(Preference.enum(for: .middleClickAction))
     })
   }
 
@@ -436,6 +488,9 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
   }
   
   override func scrollWheel(with event: NSEvent) {
+    // mpv binding bypass for discrete mouse wheel events (phase.isEmpty only)
+    if event.phase.isEmpty, tryWheelBinding(event) { return }
+
     let isMouse = event.phase.isEmpty
     let isTrackpadBegan = event.phase.contains(.began)
     let isTrackpadEnd = event.phase.contains(.ended)
@@ -518,6 +573,46 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     default:
       break
     }
+  }
+
+  /// Deferred dispatch of single-click mpv binding. If MBTN_LEFT has no binding,
+  /// falls back to IINA preference logic. Also checks mouseExitEnterCount to cancel
+  /// hideOSC when the mouse re-entered the window, consistent with performMouseActionLater.
+  @objc private func dispatchPendingLeftClick(_ timer: Timer) {
+    singleClickTimer = nil
+    if handleInputBinding("MBTN_LEFT") { return }
+    guard let action = timer.userInfo as? Preference.MouseClickAction else { return }
+    if mouseExitEnterCount >= 2 && action == .hideOSC {
+      return
+    }
+    performMouseAction(action)
+  }
+
+  /// Attempts to dispatch a mouse wheel event to an mpv WHEEL_* binding.
+  /// Only applies to discrete mouse wheel events (phase.isEmpty); trackpad continuous
+  /// scrolling returns false and falls through to the original IINA logic.
+  private func tryWheelBinding(_ event: NSEvent) -> Bool {
+    let isNatural = event.isDirectionInvertedFromDevice
+    let deltaX = isNatural ? event.scrollingDeltaX : -event.scrollingDeltaX
+    let deltaY = isNatural ? -event.scrollingDeltaY : event.scrollingDeltaY
+
+    let primaryBinding: String
+    let primaryDelta: Double
+    if abs(deltaY) >= abs(deltaX) {
+      primaryBinding = deltaY > 0 ? "WHEEL_UP" : "WHEEL_DOWN"
+      primaryDelta = Double(deltaY)
+    } else {
+      primaryBinding = deltaX > 0 ? "WHEEL_RIGHT" : "WHEEL_LEFT"
+      primaryDelta = Double(deltaX)
+    }
+
+    guard PlayerCore.keyBindings[primaryBinding] != nil else { return false }
+
+    let dispatchCount = max(1, Int(abs(primaryDelta).rounded(.awayFromZero)))
+    for _ in 0..<dispatchCount {
+      _ = handleInputBinding(primaryBinding)
+    }
+    return true
   }
 
   /**

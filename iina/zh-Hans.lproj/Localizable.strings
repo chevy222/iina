@@ -140,9 +140,9 @@
 "osd.canceled" = "已取消";
 "osd.cannot_connect" = "无法连接";
 "osd.timed_out" = "超时";
-"osd.sub_quota_exceeded" = "Subtitle download limit reached";
-"osd.sub_quota_exceeded.detail" = "Try again after %@";
-"osd.sub_quota_exceeded.detail_unknown" = "Try again later";
+"osd.sub_quota_exceeded" = "已达到字幕下载上限";
+"osd.sub_quota_exceeded.detail" = "请在 %@ 后重试";
+"osd.sub_quota_exceeded.detail_unknown" = "请稍后重试";
 "osd.filter_added" = "已添加滤镜: %@";
 "osd.filter_removed" = "已移除滤镜";
 "osd.file_loop" = "循环单个文件";
@@ -151,8 +151,8 @@
 
 "preference.title" = "偏好设置";
 "preference.general" = "通用";
-"preference.ui" = "Interface";
-"preference.video_audio" = "Video & Audio";
+"preference.ui" = "界面";
+"preference.video_audio" = "视频与音频";
 "preference.video" = "视频";
 "preference.audio" = "音频";
 "preference.subtitle" = "字幕";
@@ -285,13 +285,13 @@
 "alert.add_filter.message" = "请输入符合 mpv 的 vf 或 af 格式的滤镜字符串。";
 
 "alert.keybinding_config.error" = "无法读取快捷键配置文件“%@”！已回退至 IINA 默认的键位设置。请检查你的快捷键配置。";
-"alert.delete_keybindingset.title" = "Delete Key Binding Set";
-"alert.delete_keybindingset.message" = "Are you sure to delete this key binding set?";
+"alert.delete_keybindingset.title" = "删除按键绑定集";
+"alert.delete_keybindingset.message" = "确定要删除此按键绑定集吗？";
 
 
 "alert.extra_option.cannot_read" = "无法读取用户定义的 mpv 额外选项。";
 "alert.extra_option.empty" = "键或值不能为空！";
-"alert.extra_option.error" = "Error setting option --%@=%@ with return value %d. Please check your extra option settings in Settings > Advanced.";
+"alert.extra_option.error" = "设置选项 --%@=%@ 时出错，返回值 %d。请检查“设置 > 高级”中的额外选项。";
 "alert.extra_option.config_folder" = "设置配置文件目录 \"%@\" 时出错。";
 
 "alert.playlist.error_deleting" = "删除 %@ 时出错。";
@@ -328,8 +328,8 @@
 "alert.delete_history.message" = "确定删除所选项目？";
 "alert.delete_all_history.title" = "清除播放历史";
 "alert.delete_all_history.message" = "确定删除所有播放历史吗？";
-"alert.delete_file.title" = "Delete File";
-"alert.delete_file.message" = "Are you sure to trash the selected files?";
+"alert.delete_file.title" = "删除文件";
+"alert.delete_file.message" = "确定要将选中的文件移入废纸篓吗？";
 
 "alert.filter_hwdec.message" = "你正在添加视频滤镜。然而，当前的硬件解码器不能很好地支持视频滤镜。你可以禁用硬件解码，或使用支持“拷贝”的解码器（将占用两倍内存）。\n你可能需要再操作一次（例如剪切）才能看到效果。";
 "alert.filter_hwdec.abort" = "放弃";
@@ -375,8 +375,8 @@
 "alert.plugin_update_found.message" = "最新版本是 %@。您有 %@。您想要更新吗？";
 "alert.plugin_permission" = "此插件需要以下权限，请在继续之前检查。";
 "alert.plugin_permission_added" = "此次更新需要额外给予以下权限，请在继续之前检视。";
-"alert.install_plugin_macos_11.title" = "Install plugin from GitHub";
-"alert.install_plugin_macos_11.message" = "Use the format user/repo or enter the full GitHub URL. The plugin store is not available on macOS 11. A newer system is recommended for the best experience.";
+"alert.install_plugin_macos_11.title" = "从 GitHub 安装插件";
+"alert.install_plugin_macos_11.message" = "使用 user/repo 格式或输入完整 GitHub URL。插件商店在 macOS 11 上不可用，推荐使用更新的系统以获得最佳体验。";
 
 "playlist.total_length" = "总计 %@";
 "playlist.total_length_with_selected" = "选中 %@ / %@";
@@ -405,9 +405,9 @@
 "pl_menu.copy_url" = "复制链接";
 "pl_menu.copy_url_multi" = "复制链接";
 "pl_menu.playback" = "回放";
-"pl_menu.subtitles" = "Subtitles (%d loaded)";
-"pl_menu.network_resources" = "Network Resources";
-"pl_menu.file_operations" = "File Operations";
+"pl_menu.subtitles" = "字幕（已加载 %d 个）";
+"pl_menu.network_resources" = "网络资源";
+"pl_menu.file_operations" = "文件操作";
 "pl_menu.plugin" = "插件";
 "pl_menu.playlist" = "播放列表";
 
@@ -435,7 +435,7 @@
 "osc_toolbar.sub_track" = "选择字幕轨道";
 "osc_toolbar.screenshot" = "截图";
 "osc_toolbar.plugins" = "显示插件面板";
-"osc_toolbar.live_text" = "Toggle Live Text";
+"osc_toolbar.live_text" = "切换实时文本";
 
 "osc_pos.floating" = "浮动";
 "osc_pos.top" = "顶端";
@@ -499,51 +499,51 @@
 "plugin.updating" = "下载更新中……";
 
 // Log window
-"logwindow.all_subsystems" = "All subsystems";
+"logwindow.all_subsystems" = "所有子系统";
 "logwindow.title" = "日志查看器";
 "logwindow.time" = "时间";
 "logwindow.subsystem" = "子系统";
 "logwindow.message" = "消息";
-"logwindow.now" = "Now";
-"logwindow.now.desc" = "Follow latest logs";
-"logwindow.log_level" = "Log level";
+"logwindow.now" = "当前";
+"logwindow.now.desc" = "跟踪最新日志";
+"logwindow.log_level" = "日志级别";
 "logwindow.save" = "保存";
-"logwindow.save_filtered" = "Save filtered logs…";
-"logwindow.filter" = "Filter";
-"logwindow.clear_subsystem_selections" = "Clear Selections";
+"logwindow.save_filtered" = "筛选保存日志…";
+"logwindow.filter" = "筛选";
+"logwindow.clear_subsystem_selections" = "清除选择";
 "logwindow.copy" = "拷贝";
-"logwindow.logs" = "logs";
+"logwindow.logs" = "日志";
 
 // History window
 "history_window.title" = "播放历史";
-"history_window.col.filename" = "Media";
+"history_window.col.filename" = "媒体";
 "history_window.col.progress" = "进度";
 "history_window.col.played_at" = "播放时间";
 "history_window.menu.play" = "播放";
 "history_window.menu.play_new_window" = "在新建窗口中播放";
 "history_window.menu.show_in_finder" = "在访达中显示";
 "history_window.menu.delete" = "删除…";
-"history_window.menu.delete_file" = "Move to Trash…";
+"history_window.menu.delete_file" = "移到废纸篓…";
 "history_window.toolbar.clear" = "清除播放历史";
-"history_window.toolbar.group_by" = "Group By";
-"history_window.toolbar.group_by.menu" = "Group by";
+"history_window.toolbar.group_by" = "分组方式";
+"history_window.toolbar.group_by.menu" = "分组方式";
 "history_window.toolbar.group_by.date" = "日期";
-"history_window.toolbar.group_by.date_tooltip" = "Sort by Date";
-"history_window.toolbar.group_by.location" = "Folder and Website";
-"history_window.toolbar.group_by.location_tooltip" = "Sort by Folder and Website";
-"history_window.toolbar.expand_collapse" = "Expand/Collapse";
-"history_window.toolbar.expand_all" = "Expand All";
-"history_window.toolbar.collapse_all" = "Collapse All";
+"history_window.toolbar.group_by.date_tooltip" = "按日期排序";
+"history_window.toolbar.group_by.location" = "文件夹与网站";
+"history_window.toolbar.group_by.location_tooltip" = "按文件夹与网站排序";
+"history_window.toolbar.expand_collapse" = "展开/折叠";
+"history_window.toolbar.expand_all" = "全部展开";
+"history_window.toolbar.collapse_all" = "全部折叠";
 "history_window.search.search_in" = "在…中搜索";
 "history_window.search.filename" = "文件名";
-"history_window.search.full_path" = "Full Path";
+"history_window.search.full_path" = "完整路径";
 "history_window.search.no_recents" = "无近期搜索记录";
 "history_window.search.recents_title" = "最近的搜索";
 "history_window.search.clear_recents" = "清除最近搜索";
 
 // Sidebar
 
-"sidebar.layout" = "Layout";
+"sidebar.layout" = "布局";
 "sidebar.video" = "视频";
 "sidebar.audio" = "音频";
 "sidebar.sub" = "字幕";
@@ -560,36 +560,36 @@
 "sidebar.contrast" = "对比度";
 "sidebar.saturation" = "饱和度";
 "sidebar.gamma" = "伽马";
-"sidebar.hue" = "Hue";
+"sidebar.hue" = "色调";
 
 "sidebar.load_external_audio" = "加载外置音频…";
-"sidebar.delay" = "Delay";
+"sidebar.delay" = "延迟";
 
-"sidebar.eq" = "Equalizer";
+"sidebar.eq" = "均衡器";
 "sidebar.save_eq" = "保存当前均衡器为预设…";
 "sidebar.rename_eq" = "重命名当前EQ预设…";
 "sidebar.remove_eq" = "删除当前的 EQ 预设";
 "sidebar.manual_eq" = "手动";
 
-"sidebar.primary" = "Primary";
-"sidebar.secondary" = "Secondary";
-"sidebar.external_subtitles" = "External Subtitles";
+"sidebar.primary" = "主要";
+"sidebar.secondary" = "次要";
+"sidebar.external_subtitles" = "外挂字幕";
 "sidebar.load_subtitle" = "加载字幕…";
 "sidebar.search_online" = "在线查找…";
-"sidebar.position" = "Position";
-"sidebar.scale" = "Scale";
+"sidebar.position" = "位置";
+"sidebar.scale" = "缩放";
 "sidebar.font" = "字体";
-"sidebar.color" = "Color";
-"sidebar.text" = "Text";
+"sidebar.color" = "颜色";
+"sidebar.text" = "文字";
 "sidebar.border" = "边框";
-"sidebar.background" = "Background";
-"sidebar.sub_settings_not_available" = "Some settings are not available for this subtitle type.";
+"sidebar.background" = "背景";
+"sidebar.sub_settings_not_available" = "此字幕类型的部分设置不可用。";
 "sidebar.sub_style_warning" = "字幕样式选项可能会破坏ASS渲染。根据字幕类型其中一些样式将被禁用。";
 
 "sidebar.add_file" = "添加文件…";
 "sidebar.add_url" = "添加 URL…";
 
-"sidebar.plugins_placeholder" = "Plugins can display custom sidebar contents. Select a plugin to view its sidebar or install a new plugin in Settings.";
+"sidebar.plugins_placeholder" = "插件可显示自定义侧边栏内容。选择一个插件以查看其侧边栏，或在设置中安装新插件。";
 
 // Settings
 
@@ -714,7 +714,7 @@
 "settings.pinchAction.label" = "双指缩放时";
 "settings.playbackSpeedScrollAmount.label" = "速度灵敏度";
 "settings.relativeSeekAmount.label" = "查找滚动灵敏度";
-"settings.rightClickAction.desc" = "中键单击时";
+"settings.rightClickAction.desc" = "右键单击时";
 "settings.rightClickAction.items.0" = "无";
 "settings.rightClickAction.items.2" = "暂停 / 继续";
 "settings.rightClickAction.items.3" = "隐藏播放控制";
@@ -763,7 +763,7 @@
 "settings.ytdlSearchPath.label" = "自定义 youtube-dl 路径";
 
 // Settings - Subtitles
-"settings.autoSearchOnlineSub.desc" = "If enabled, IINA will automatically search online subtitles only for videos without loaded subtitles and longer than 20 minutes.";
+"settings.autoSearchOnlineSub.desc" = "启用后，IINA 只会为未加载字幕且长度超过 20 分钟的视频自动搜索在线字幕。";
 "settings.autoSearchOnlineSub.label" = "自动搜索在线字幕";
 "settings.displayInLetterBox.label" = "全屏时将字幕显示在黑边";
 "settings.subAlignX.items.0" = "左";

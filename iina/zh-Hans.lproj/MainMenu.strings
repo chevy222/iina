@@ -92,7 +92,7 @@
 "ArE-2s-JIV.title" = "去台标/遮挡字幕";
 
 /* Class = "NSMenuItem"; title = "Saved Video Filters"; ObjectID = "BDr-G9-IRx"; */
-"BDr-G9-IRx.title" = "已保存视频滤镜";
+"BDr-G9-IRx.title" = "已保存的视频滤镜";
 
 /* Class = "NSMenuItem"; title = "Preferences…"; ObjectID = "BOF-NM-1cW"; */
 "BOF-NM-1cW.title" = "偏好设置…";
@@ -143,7 +143,7 @@
 "Fal-I4-PZk.title" = "章节";
 
 /* Class = "NSMenu"; title = "Playback"; ObjectID = "GEO-Iw-cKr"; */
-"GEO-Iw-cKr.title" = "回放";
+"GEO-Iw-cKr.title" = "播放";
 
 /* Class = "NSMenuItem"; title = "Audio Track"; ObjectID = "GF1-xB-KcA"; */
 "GF1-xB-KcA.title" = "音频轨道";
@@ -479,10 +479,10 @@
 "wex-rX-PcY.title" = "窗口置顶";
 
 /* Class = "NSMenuItem"; title = "Lock Window Aspect Ratio"; ObjectID = "Saz-zT-RXt"; */
-"Saz-zT-RXt.title" = "Lock Window Aspect Ratio";
+"Saz-zT-RXt.title" = "锁定窗口宽高比";
 
 /* Class = "NSMenuItem"; title = "Live Text"; ObjectID = "lq9-av-Um9"; */
-"lq9-av-Um9.title" = "Live Text";
+"lq9-av-Um9.title" = "实时文本";
 
 /* Class = "NSMenuItem"; title = "Saved Audio Filters"; ObjectID = "wgZ-DO-nn3"; */
 "wgZ-DO-nn3.title" = "保存的音频滤镜";
@@ -497,7 +497,7 @@
 "xDJ-GA-Gjs.title" = "字幕";
 
 /* Class = "NSMenu"; title = "Saved Video Filters"; ObjectID = "xhY-fF-oio"; */
-"xhY-fF-oio.title" = "保存的视频滤镜";
+"xhY-fF-oio.title" = "已保存的视频滤镜";
 
 /* Class = "NSMenuItem"; title = "Deinterlace"; ObjectID = "yHI-7D-OaI"; */
 "yHI-7D-OaI.title" = "反交错";
@@ -515,7 +515,7 @@
 "Y6q-cI-vfM.title" = "插件";
 
 /* Class = "NSMenuItem"; title = "Open URL…"; ObjectID = "Qwb-26-zjX"; */
-"Qwb-26-zjX.title" = "打开URL…";
+"Qwb-26-zjX.title" = "打开 URL…";
 
 /* Class = "NSMenuItem"; title = "Release Highlights"; ObjectID = "kOx-hc-aQG"; */
 "kOx-hc-aQG.title" = "更新亮点";
