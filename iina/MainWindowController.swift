@@ -293,14 +293,6 @@ class MainWindowController: PlayerWindowController {
       if let newValue = change[.newKey] as? Bool {
         (playSlider.cell as! PlaySliderCell).drawChapters = newValue
       }
-    case PK.verticalScrollAction.rawValue:
-      if let newValue = change[.newKey] as? Int {
-        verticalScrollAction = Preference.ScrollAction(rawValue: newValue)!
-      }
-    case PK.horizontalScrollAction.rawValue:
-      if let newValue = change[.newKey] as? Int {
-        horizontalScrollAction = Preference.ScrollAction(rawValue: newValue)!
-      }
     case PK.arrowButtonAction.rawValue:
       if let newValue = change[.newKey] as? Int {
         arrowBtnFunction = Preference.ArrowButtonAction(rawValue: newValue)!
@@ -2033,9 +2025,11 @@ class MainWindowController: PlayerWindowController {
 
   @objc
   override func updateTitle() {
+    let newTitle: String
     if player.info.isNetworkResource {
       window?.representedURL = nil
-      window?.title = player.getMediaTitle()
+      newTitle = player.getMediaTitle()
+      window?.title = newTitle
     } else {
       window?.representedURL = player.info.currentURL
       // Workaround for issue #3543, IINA crashes reporting:
@@ -2056,13 +2050,14 @@ class MainWindowController: PlayerWindowController {
       // This problem has been reported to Apple as:
       // "setTitleWithRepresentedFilename throws NSInvalidArgumentException: NSNextStepFrame _displayName"
       // Feedback number FB9789129
+      newTitle = player.info.currentURL?.lastPathComponent ?? ""
       if Preference.bool(for: .useLegacyFullScreen) {
-        window?.title = player.info.currentURL?.lastPathComponent ?? ""
+        window?.title = newTitle
       } else {
         window?.setTitleWithRepresentedFilename(player.info.currentURL?.path ?? "")
       }
     }
-    titleBarView?.updateTitle()
+    titleBarView?.updateTitle(newTitle)
 
     // Sometimes the doc icon may not be available, eg. when opened an online video.
     // We should try to add it every time when window title changed.

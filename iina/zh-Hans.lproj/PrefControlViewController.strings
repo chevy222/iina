@@ -68,7 +68,7 @@
 "QhO-As-ZLL.title" = "单击鼠标时:";
 
 /* Class = "NSMenuItem"; title = "Seek"; ObjectID = "RCe-3m-q9N"; */
-"RCe-3m-q9N.title" = "查找";
+"RCe-3m-q9N.title" = "跳转";
 
 /* Class = "NSTextFieldCell"; title = "Right click to:"; ObjectID = "Rqy-g2-AP2"; */
 "Rqy-g2-AP2.title" = "右键单击时:";
@@ -81,9 +81,6 @@
 
 /* Class = "NSMenuItem"; title = "Reset speed"; ObjectID = "Vv4-AU-kGj"; */
 "Vv4-AU-kGj.title" = "重置速度";
-
-/* Class = "NSMenuItem"; title = "Adjust playback speed"; ObjectID = "XXq-G1-9sl"; */
-"XXq-G1-9sl.title" = "调整播放速度";
 
 /* Class = "NSTextFieldCell"; title = "Sensitivity for volume:"; ObjectID = "YQH-1a-WcM"; */
 "YQH-1a-WcM.title" = "音量滚动灵敏度:";
@@ -156,9 +153,6 @@
 
 /* Class = "NSMenuItem"; title = "Adjust volume"; ObjectID = "CXf-Ca-OhE"; */
 "CXf-Ca-OhE.title" = "调整音量";
-
-/* Class = "NSMenuItem"; title = "Adjust playback speed"; ObjectID = "nJZ-9M-DHk"; */
-"nJZ-9M-DHk.title" = "调整播放速度";
 
 /* Class = "NSMenuItem"; title = "None"; ObjectID = "wkV-Gq-B0T"; */
 "wkV-Gq-B0T.title" = "无";

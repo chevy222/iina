@@ -124,6 +124,14 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
       if let newValue = change[.newKey] as? Int {
         doubleClickAction = Preference.MouseClickAction(rawValue: newValue)!
       }
+    case PK.horizontalScrollAction.rawValue:
+      if let newValue = change[.newKey] as? Int {
+        horizontalScrollAction = Preference.ScrollAction(rawValue: newValue)!
+      }
+    case PK.verticalScrollAction.rawValue:
+      if let newValue = change[.newKey] as? Int {
+        verticalScrollAction = Preference.ScrollAction(rawValue: newValue)!
+      }
     case PK.autoSwitchToMusicMode.rawValue:
       player.overrideAutoSwitchToMusicMode = false
     default:
@@ -293,6 +301,24 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     }
   }
 
+  /// 尝试将鼠标键事件派发给 mpv input.conf 绑定。
+  /// 返回 true 表示已处理（调用方应停止后续 IINA 逻辑）；false 表示无绑定，由调用方走原有 IINA 逻辑。
+  @discardableResult
+  private func handleInputBinding(_ input: String) -> Bool {
+    guard let keyBinding = PlayerCore.keyBindings[input] else { return false }
+    return handleKeyBinding(keyBinding)
+  }
+
+  /// 将 macOS 鼠标按钮编号映射为 mpv 按钮名称。
+  private func mpvMouseButtonName(for buttonNumber: Int) -> String? {
+    switch buttonNumber {
+    case 2: return "MBTN_MID"
+    case 3: return "MBTN_FORWARD"
+    case 4: return "MBTN_BACK"
+    default: return nil
+    }
+  }
+
   func abLoop() {
     player.abLoop()
     syncSlider()
@@ -369,20 +395,10 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     PluginInputManager.handle(
       input: PluginInputManager.Input.mouse, event: .mouseUp, player: player,
       arguments: mouseEventArgs(event), defaultHandler: { [self] in
-      // default handler
-      if event.clickCount == 1 {
-        if doubleClickAction == .none {
-          performMouseAction(singleClickAction)
-        } else {
-          singleClickTimer = Timer.scheduledTimer(timeInterval: NSEvent.doubleClickInterval, target: self, selector: #selector(performMouseActionLater), userInfo: singleClickAction, repeats: false)
-          mouseExitEnterCount = 0
-        }
-      } else if event.clickCount == 2 {
-        if let timer = singleClickTimer {
-          timer.invalidate()
-          singleClickTimer = nil
-        }
-        performMouseAction(doubleClickAction)
+      if event.clickCount == 2 {
+        self.handleInputBinding("MBTN_LEFT_DBL")
+      } else {
+        self.handleInputBinding("MBTN_LEFT")
       }
     })
   }
@@ -408,20 +424,22 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     PluginInputManager.handle(
       input: PluginInputManager.Input.rightMouse, event: .mouseUp, player: player,
       arguments: mouseEventArgs(event), defaultHandler: {
-      self.performMouseAction(Preference.enum(for: .rightClickAction))
+      self.handleInputBinding("MBTN_RIGHT")
     })
   }
 
   override func otherMouseUp(with event: NSEvent) {
     guard !event.inAnyOf(mouseActionDisabledViews) else { return }
-    
+
     PluginInputManager.handle(
       input: PluginInputManager.Input.otherMouse, event: .mouseUp, player: player,
       arguments: mouseEventArgs(event), defaultHandler: {
-      if event.type == .otherMouseUp {
-        self.performMouseAction(Preference.enum(for: .middleClickAction))
-      } else {
+      guard event.type == .otherMouseUp else {
         super.otherMouseUp(with: event)
+        return
+      }
+      if let input = self.mpvMouseButtonName(for: event.buttonNumber) {
+        self.handleInputBinding(input)
       }
     })
   }
@@ -436,106 +454,40 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
   }
   
   override func scrollWheel(with event: NSEvent) {
-    let isMouse = event.phase.isEmpty
-    let isTrackpadBegan = event.phase.contains(.began)
-    let isTrackpadEnd = event.phase.contains(.ended)
-
-    // determine direction
-
-    if isMouse || isTrackpadBegan {
-      if event.scrollingDeltaX != 0 {
-        scrollDirection = .horizontal
-      } else if event.scrollingDeltaY != 0 {
-        scrollDirection = .vertical
-      }
-    } else if isTrackpadEnd {
-      scrollDirection = nil
+    // 仅当存在 mpv WHEEL_* 绑定时处理滚轮事件
+    if event.phase.isEmpty {
+      _ = self.tryWheelBinding(event)
     }
+  }
 
-    let scrollAction: Preference.ScrollAction
-    if seekOverride {
-      scrollAction = .seek
-    } else if volumeOverride {
-      scrollAction = .volume
-    } else {
-      scrollAction = scrollDirection == .horizontal ? horizontalScrollAction : verticalScrollAction
-      // show volume popover when volume seek begins and hide on end
-      if let miniPlayer = self as? MiniPlayerWindowController, scrollAction == .volume {
-        miniPlayer.handleVolumePopover(isTrackpadBegan, isTrackpadEnd, isMouse)
-      }
-    }
-
-    // pause video when seek begins
-
-    if scrollAction == .seek && isTrackpadBegan {
-      // record pause status
-      if player.info.state == .playing {
-        player.pause()
-        wasPlayingBeforeSeeking = true
-      }
-    }
-
-    if isTrackpadEnd && wasPlayingBeforeSeeking {
-      // only resume playback when it was playing before seeking
-      if wasPlayingBeforeSeeking {
-        player.resume()
-      }
-      wasPlayingBeforeSeeking = false
-    }
-
-    // handle the delta value
-
-    let isPrecise = event.hasPreciseScrollingDeltas
+  /// 尝试将鼠标滚轮事件派发给 mpv WHEEL_* binding。
+  /// 仅对 phase.isEmpty 的离散滚轮事件生效；trackpad 连续滚动返回 false 走原有逻辑。
+  private func tryWheelBinding(_ event: NSEvent) -> Bool {
     let isNatural = event.isDirectionInvertedFromDevice
+    let deltaX = isNatural ? event.scrollingDeltaX : -event.scrollingDeltaX
+    let deltaY = isNatural ? -event.scrollingDeltaY : event.scrollingDeltaY
 
-    var deltaX = isPrecise ? Double(event.scrollingDeltaX) : event.scrollingDeltaX.unifiedDouble
-    var deltaY = isPrecise ? Double(event.scrollingDeltaY) : event.scrollingDeltaY.unifiedDouble * 2
-
-    if isNatural {
-      deltaY = -deltaY
+    // 主方向判定
+    let primaryBinding: String
+    let primaryDelta: Double
+    if abs(deltaY) >= abs(deltaX) {
+      primaryBinding = deltaY > 0 ? "WHEEL_UP" : "WHEEL_DOWN"
+      primaryDelta = Double(deltaY)
     } else {
-      deltaX = -deltaX
+      primaryBinding = deltaX > 0 ? "WHEEL_RIGHT" : "WHEEL_LEFT"
+      primaryDelta = Double(deltaX)
     }
 
-    let delta = scrollDirection == .horizontal ? deltaX : deltaY
+    guard PlayerCore.keyBindings[primaryBinding] != nil else { return false }
 
-    // perform action
-    
-    switch scrollAction {
-    case .seek:
-      let seekAmount = (isMouse ? AppData.seekAmountMapMouse : AppData.seekAmountMap)[relativeSeekAmount] * delta
-      player.seek(relativeSecond: seekAmount, option: useExactSeek)
-    case .volume:
-      // don't use precised delta for mouse
-      let newVolume = player.info.volume + (isMouse ? delta : AppData.volumeMap[volumeScrollAmount] * delta)
-      player.setVolume(newVolume)
-      volumeSlider.doubleValue = newVolume
-    case .playbackSpeed:
-      let min = 0.05
-      let max = 4.0
-      let newSpeed = round(1000 * (player.info.playSpeed + (player.info.playSpeed * AppData.playbackSpeedMap[playbackSpeedScrollAmount] * delta)).clamped(to: min...max)) / 1000
-      player.setSpeed(newSpeed)
-    default:
-      break
+    // 按 delta 绝对值决定派发次数（整数计数，不做平滑插值）
+    let dispatchCount = max(1, Int(abs(primaryDelta).rounded(.awayFromZero)))
+    for _ in 0..<dispatchCount {
+      _ = handleInputBinding(primaryBinding)
     }
+    return true
   }
 
-  /**
-   Being called to perform single click action after timeout.
-
-   - SeeAlso:
-   mouseUp(with:)
-   */
-  @objc internal func performMouseActionLater(_ timer: Timer) {
-    guard let action = timer.userInfo as? Preference.MouseClickAction else { return }
-    if mouseExitEnterCount >= 2 && action == .hideOSC {
-      // the counter being greater than or equal to 2 means that the mouse re-entered the window
-      // `showUI()` must be called due to the movement in the window, thus `hideOSC` action should be cancelled
-      return
-    }
-    performMouseAction(action)
-  }
-  
   // MARK: - Window delegate: Activeness status
 
   func windowDidBecomeMain(_ notification: Notification) {

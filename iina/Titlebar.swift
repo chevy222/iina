@@ -261,12 +261,16 @@ class Titlebar: NSView {
     removeBlackBarButton.isHidden = !shouldShow
   }
 
-  func updateTitle() {
+  func updateTitle(_ title: String? = nil) {
     guard let titleTextField,
-          let docIcon,
-          let sysTitle = mainWindow.titleTextField else { return }
+          let docIcon else { return }
 
-    titleTextField.stringValue = sysTitle.stringValue
+    if let title = title {
+      titleTextField.stringValue = title
+    } else if let sysTitle = mainWindow.titleTextField {
+      titleTextField.stringValue = sysTitle.stringValue
+    }
+
     if let fileName = mainWindow.window?.representedFilename {
       docIcon.image = NSWorkspace.shared.icon(forFile: fileName)
     } else {

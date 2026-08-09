@@ -24,19 +24,10 @@ class PrefControlViewController: PreferenceViewController, PreferenceWindowEmbed
   }
 
   override var sectionViews: [NSView] {
-    return [sectionTrackpadView, sectionMouseView]
+    return [sectionTrackpadView]
   }
 
   @IBOutlet var sectionTrackpadView: NSView!
   @IBOutlet var sectionMouseView: NSView!
-
-  @IBOutlet weak var forceTouchLabel: NSTextField!
-  @IBOutlet weak var scrollVerticallyLabel: NSTextField!
-
-  override func viewDidLoad() {
-    super.viewDidLoad()
-
-    forceTouchLabel.widthAnchor.constraint(equalTo: scrollVerticallyLabel.widthAnchor, multiplier: 1).isActive = true
-  }
 
 }
