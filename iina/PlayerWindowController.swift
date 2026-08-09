@@ -124,6 +124,14 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
       if let newValue = change[.newKey] as? Int {
         doubleClickAction = Preference.MouseClickAction(rawValue: newValue)!
       }
+    case PK.horizontalScrollAction.rawValue:
+      if let newValue = change[.newKey] as? Int {
+        horizontalScrollAction = Preference.ScrollAction(rawValue: newValue)!
+      }
+    case PK.verticalScrollAction.rawValue:
+      if let newValue = change[.newKey] as? Int {
+        verticalScrollAction = Preference.ScrollAction(rawValue: newValue)!
+      }
     case PK.autoSwitchToMusicMode.rawValue:
       player.overrideAutoSwitchToMusicMode = false
     default:
@@ -293,6 +301,24 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     }
   }
 
+  /// 尝试将鼠标键事件派发给 mpv input.conf 绑定。
+  /// 返回 true 表示已处理（调用方应停止后续 IINA 逻辑）；false 表示无绑定，由调用方走原有 IINA 逻辑。
+  @discardableResult
+  private func handleInputBinding(_ input: String) -> Bool {
+    guard let keyBinding = PlayerCore.keyBindings[input] else { return false }
+    return handleKeyBinding(keyBinding)
+  }
+
+  /// 将 macOS 鼠标按钮编号映射为 mpv 按钮名称。
+  private func mpvMouseButtonName(for buttonNumber: Int) -> String? {
+    switch buttonNumber {
+    case 2: return "MBTN_MID"
+    case 3: return "MBTN_FORWARD"
+    case 4: return "MBTN_BACK"
+    default: return nil
+    }
+  }
+
   func abLoop() {
     player.abLoop()
     syncSlider()
@@ -369,7 +395,28 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     PluginInputManager.handle(
       input: PluginInputManager.Input.mouse, event: .mouseUp, player: player,
       arguments: mouseEventArgs(event), defaultHandler: { [self] in
-      // default handler
+      // 优先：mpv binding
+      if event.clickCount == 2 {
+        if self.handleInputBinding("MBTN_LEFT_DBL") { return }
+        // DBL 无绑定时，回退到单击 binding
+        if self.handleInputBinding("MBTN_LEFT") { return }
+      } else {
+        // 单击：如果有 DBL 绑定则延迟派发，否则直接派发 MBTN_LEFT
+        if PlayerCore.keyBindings["MBTN_LEFT_DBL"] != nil {
+          singleClickTimer?.invalidate()
+          singleClickTimer = Timer.scheduledTimer(
+            timeInterval: NSEvent.doubleClickInterval,
+            target: self,
+            selector: #selector(dispatchPendingLeftClick),
+            userInfo: singleClickAction,
+            repeats: false)
+          mouseExitEnterCount = 0
+          return  // 等待 timer，不立即执行
+        }
+        if self.handleInputBinding("MBTN_LEFT") { return }
+      }
+
+      // 兜底：原有 IINA 偏好逻辑
       if event.clickCount == 1 {
         if doubleClickAction == .none {
           performMouseAction(singleClickAction)
@@ -408,20 +455,28 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     PluginInputManager.handle(
       input: PluginInputManager.Input.rightMouse, event: .mouseUp, player: player,
       arguments: mouseEventArgs(event), defaultHandler: {
-      self.performMouseAction(Preference.enum(for: .rightClickAction))
+      if !self.handleInputBinding("MBTN_RIGHT") {
+        self.performMouseAction(Preference.enum(for: .rightClickAction))  // 兜底
+      }
     })
   }
 
   override func otherMouseUp(with event: NSEvent) {
     guard !event.inAnyOf(mouseActionDisabledViews) else { return }
-    
+
     PluginInputManager.handle(
       input: PluginInputManager.Input.otherMouse, event: .mouseUp, player: player,
       arguments: mouseEventArgs(event), defaultHandler: {
-      if event.type == .otherMouseUp {
-        self.performMouseAction(Preference.enum(for: .middleClickAction))
-      } else {
+      guard event.type == .otherMouseUp else {
         super.otherMouseUp(with: event)
+        return
+      }
+      guard let input = self.mpvMouseButtonName(for: event.buttonNumber) else {
+        self.performMouseAction(Preference.enum(for: .middleClickAction))  // 兜底
+        return
+      }
+      if !self.handleInputBinding(input) {
+        self.performMouseAction(Preference.enum(for: .middleClickAction))  // 兜底
       }
     })
   }
@@ -436,6 +491,9 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
   }
   
   override func scrollWheel(with event: NSEvent) {
+    // 鼠标滚轮的 mpv binding 旁路（仅 phase.isEmpty 的离散滚轮事件）
+    if event.phase.isEmpty, self.tryWheelBinding(event) { return }
+
     let isMouse = event.phase.isEmpty
     let isTrackpadBegan = event.phase.contains(.began)
     let isTrackpadEnd = event.phase.contains(.ended)
@@ -535,7 +593,50 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     }
     performMouseAction(action)
   }
-  
+
+  /// 延迟派发单击 binding。若 MBTN_LEFT 无绑定，回退到 IINA 偏好逻辑。
+  /// 同时检查 mouseExitEnterCount 以取消鼠标重新进入窗口后的 hideOSC 动作，
+  /// 与 performMouseActionLater 保持一致行为。
+  @objc internal func dispatchPendingLeftClick(_ timer: Timer) {
+    singleClickTimer = nil
+    // 优先尝试 mpv binding
+    if handleInputBinding("MBTN_LEFT") { return }
+    // 无 MBTN_LEFT 绑定时，回退到 IINA 偏好逻辑
+    guard let action = timer.userInfo as? Preference.MouseClickAction else { return }
+    if mouseExitEnterCount >= 2 && action == .hideOSC {
+      return
+    }
+    performMouseAction(action)
+  }
+
+  /// 尝试将鼠标滚轮事件派发给 mpv WHEEL_* binding。
+  /// 仅对 phase.isEmpty 的离散滚轮事件生效；trackpad 连续滚动返回 false 走原有逻辑。
+  private func tryWheelBinding(_ event: NSEvent) -> Bool {
+    let isNatural = event.isDirectionInvertedFromDevice
+    let deltaX = isNatural ? event.scrollingDeltaX : -event.scrollingDeltaX
+    let deltaY = isNatural ? -event.scrollingDeltaY : event.scrollingDeltaY
+
+    // 主方向判定
+    let primaryBinding: String
+    let primaryDelta: Double
+    if abs(deltaY) >= abs(deltaX) {
+      primaryBinding = deltaY > 0 ? "WHEEL_UP" : "WHEEL_DOWN"
+      primaryDelta = Double(deltaY)
+    } else {
+      primaryBinding = deltaX > 0 ? "WHEEL_RIGHT" : "WHEEL_LEFT"
+      primaryDelta = Double(deltaX)
+    }
+
+    guard PlayerCore.keyBindings[primaryBinding] != nil else { return false }
+
+    // 按 delta 绝对值决定派发次数（整数计数，不做平滑插值）
+    let dispatchCount = max(1, Int(abs(primaryDelta).rounded(.awayFromZero)))
+    for _ in 0..<dispatchCount {
+      _ = handleInputBinding(primaryBinding)
+    }
+    return true
+  }
+
   // MARK: - Window delegate: Activeness status
 
   func windowDidBecomeMain(_ notification: Notification) {

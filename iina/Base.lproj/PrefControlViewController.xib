@@ -8,8 +8,6 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefControlViewController" customModule="IINA" customModuleProvider="target">
             <connections>
-                <outlet property="forceTouchLabel" destination="rUe-Ix-oaI" id="RWA-jP-now"/>
-                <outlet property="scrollVerticallyLabel" destination="oVB-QD-c1C" id="qip-5h-7Je"/>
                 <outlet property="sectionMouseView" destination="Wmg-PT-BGO" id="5YU-mu-IUc"/>
                 <outlet property="sectionTrackpadView" destination="VSf-E0-Btw" id="xIc-t9-VIf"/>
                 <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
@@ -26,7 +24,7 @@
             <rect key="frame" x="0.0" y="0.0" width="480" height="330"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="zSQ-pa-Urx">
+                <textField identifier="keep" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="zSQ-pa-Urx">
                     <rect key="frame" x="56" y="228" width="168" height="16"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Seek type:" id="1yb-m4-1sK">
                         <font key="font" metaFont="system"/>
@@ -42,7 +40,7 @@
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
-                <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="VlR-LI-plv">
+                <popUpButton identifier="keep" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="VlR-LI-plv">
                     <rect key="frame" x="227" y="241" width="227" height="25"/>
                     <popUpButtonCell key="cell" type="push" title="Keyframe seek" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="wBB-fx-Mao" id="BFn-Bz-29A">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -59,7 +57,7 @@
                         <binding destination="Yrj-d0-KaY" name="selectedTag" keyPath="values.useExactSeek" id="wcY-Ar-BKb"/>
                     </connections>
                 </popUpButton>
-                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="LN0-rs-jJB">
+                <textField identifier="keep" horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="LN0-rs-jJB">
                     <rect key="frame" x="56" y="206" width="426" height="14"/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Exact seek is more precise but can cause lag and higher CPU usage." id="6FZ-Qm-0k0">
                         <font key="font" metaFont="message" size="11"/>
@@ -174,7 +172,7 @@
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
-                <customView translatesAutoresizingMaskIntoConstraints="NO" id="2ma-hh-43h" userLabel="Mouse Image Container View">
+                <customView identifier="keep" translatesAutoresizingMaskIntoConstraints="NO" id="2ma-hh-43h" userLabel="Mouse Image Container View">
                     <rect key="frame" x="0.0" y="287" width="38" height="43"/>
                     <subviews>
                         <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="h4p-a3-cku" userLabel="Mouse Image View">
@@ -316,7 +314,7 @@
                         <binding destination="Yrj-d0-KaY" name="selectedTag" keyPath="values.middleClickAction" id="MJu-hf-djb"/>
                     </connections>
                 </popUpButton>
-                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="l7e-jz-0cj">
+                <button identifier="keep" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="l7e-jz-0cj">
                     <rect key="frame" x="56" y="118" width="290" height="18"/>
                     <buttonCell key="cell" type="check" title="Accepts first mouse click when not focused" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="gZK-ry-lQs">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>

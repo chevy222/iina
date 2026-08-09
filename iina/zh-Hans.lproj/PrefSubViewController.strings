@@ -32,7 +32,7 @@
 "9pv-1r-nuH.title" = "字体";
 
 /* Class = "NSTextFieldCell"; title = "Y:"; ObjectID = "ALz-LB-8sf"; */
-"ALz-LB-8sf.title" = "Y:";
+"ALz-LB-8sf.title" = "Y：";
 
 /* Class = "NSBox"; title = "Shadow"; ObjectID = "BgE-Kk-MXC"; */
 "BgE-Kk-MXC.title" = "阴影";
@@ -44,7 +44,7 @@
 "C4C-XP-i2S.title" = "字体";
 
 /* Class = "NSTextFieldCell"; title = " X:"; ObjectID = "CdS-9J-f2h"; */
-"CdS-9J-f2h.title" = " X:";
+"CdS-9J-f2h.title" = " X：";
 
 /* Class = "NSTextFieldCell"; title = "Advanced"; ObjectID = "DUA-7H-Yje"; */
 "DUA-7H-Yje.title" = "高级";

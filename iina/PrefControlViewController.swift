@@ -30,13 +30,15 @@ class PrefControlViewController: PreferenceViewController, PreferenceWindowEmbed
   @IBOutlet var sectionTrackpadView: NSView!
   @IBOutlet var sectionMouseView: NSView!
 
-  @IBOutlet weak var forceTouchLabel: NSTextField!
-  @IBOutlet weak var scrollVerticallyLabel: NSTextField!
-
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    forceTouchLabel.widthAnchor.constraint(equalTo: scrollVerticallyLabel.widthAnchor, multiplier: 1).isActive = true
+    // 通过 XIB identifier 标记过滤 sectionMouseView 子视图。
+    // 保留标记为 "keep" 的控件以及隐藏的 SectionTitleMouse 标题，移除其余鼠标/滚轮动作配置控件。
+    let keepIdentifiers: Set<String> = ["keep", "SectionTitleMouse"]
+    sectionMouseView.subviews
+      .filter { !keepIdentifiers.contains($0.identifier?.rawValue ?? "") }
+      .forEach { $0.removeFromSuperview() }
   }
 
 }
