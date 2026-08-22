@@ -127,8 +127,6 @@ class MainWindowController: PlayerWindowController {
   // might use another obj to handle slider?
   var isMouseInWindow: Bool = false
   var isMouseInSlider: Bool = false
-  /** flag to ignore abrupt momentum scrolls */
-  private var isMomentumScrollingAllowed = false
 
   var isFastforwarding: Bool = false
 
@@ -1177,25 +1175,6 @@ class MainWindowController: PlayerWindowController {
 
   override func scrollWheel(with event: NSEvent) {
     guard !interactiveMode.isActive else { return }
-    if !isMomentumScrollingAllowed && !event.momentumPhase.isEmpty {
-      // ignore delta caused by abrupt momentum phases
-      return
-    }
-    /**
-     reference: https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/EventOverview/HandlingTouchEvents/HandlingTouchEvents.html#//apple_ref/doc/uid/10000060i-CH13
-
-     normal momentum scrolling will be like this:
-        phase=Began momentumPhase=None
-        phase=Changed momentumPhase=None
-        ...
-        **phase=Ended** momentumPhase=None
-        **phase=None** momentumPhase=None
-        phase=None **momentumPhase=Began**
-
-     abnormal momentum scrolling, e.g. after dismissing notification banner quickly like:
-        phase=None **momentumPhase=Began/Changed**
-     */
-    isMomentumScrollingAllowed = event.phase.contains(.ended) || isMouseInWindow // previous
     guard !event.inAnyOf([currentControlBar, titleBarView] + sidebars.mouseActionDisabledViews) else { return }
 
     super.scrollWheel(with: event)
@@ -1236,8 +1215,6 @@ class MainWindowController: PlayerWindowController {
       if oscFloatingView.isDragging { return }
       destroyTimer()
       hideUI()
-      // reset after moved out of window
-      isMomentumScrollingAllowed = false
     } else if obj == 1 {
       // slider
       isMouseInSlider = false
