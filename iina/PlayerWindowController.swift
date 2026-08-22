@@ -376,7 +376,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 
     PluginInputManager.handle(
       input: PluginInputManager.Input.otherMouse, event: .mouseUp, player: player,
-      arguments: mouseEventArgs(event), defaultHandler: { [self] in
+      arguments: mouseEventArgs(event), defaultHandler: {
       if event.type == .otherMouseUp {
         // default handler: dispatch the event to the mpv input binding
         let key: String
@@ -387,7 +387,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
         default: return
         }
         if let kb = PlayerCore.keyBindings[key] {
-          handleKeyBinding(kb)
+          self.handleKeyBinding(kb)
         }
       } else {
         super.otherMouseUp(with: event)
