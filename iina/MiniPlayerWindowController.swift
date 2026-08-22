@@ -59,8 +59,6 @@ class MiniPlayerWindowController: PlayerWindowController, NSPopoverDelegate {
 
   var videoViewAspectConstraint: NSLayoutConstraint?
 
-  var hideVolumeControlTask: DispatchWorkItem?
-
   var playlistView: PlaylistViewController {
     return player.mainWindow.sidebars.playlistView
   }
@@ -378,18 +376,9 @@ class MiniPlayerWindowController: PlayerWindowController, NSPopoverDelegate {
   }
 
   override func scrollWheel(with event: NSEvent) {
-    if event.inAnyOf([playSlider]) && playSlider.isEnabled {
-      seekOverride = true
-    } else if event.inAnyOf([volumeControlContainer]) && volumeSlider.isEnabled {
-      volumeOverride = true
-    } else {
-      guard !event.inAnyOf([backgroundView, playlistWrapperView]) else { return }
-    }
+    guard !event.inAnyOf(mouseActionDisabledViews) else { return }
 
     super.scrollWheel(with: event)
-
-    seekOverride = false
-    volumeOverride = false
   }
 
   override func mouseEntered(with event: NSEvent) {
@@ -571,23 +560,6 @@ class MiniPlayerWindowController: PlayerWindowController, NSPopoverDelegate {
   func popoverWillClose(_ notification: Notification) {
     if NSWindow.windowNumber(at: NSEvent.mouseLocation, belowWindowWithWindowNumber: 0) != window!.windowNumber {
       hideControl()
-    }
-  }
-
-  func handleVolumePopover(_ isTrackpadBegan: Bool, _ isTrackpadEnd: Bool, _ isMouse: Bool) {
-    hideVolumeControlTask?.cancel()
-    hideVolumeControlTask = DispatchWorkItem {
-      self.hideVolumeControl()
-    }
-    if isTrackpadBegan {
-      showVolumePopover(animated: false)
-    } else if isTrackpadEnd {
-      DispatchQueue.main.asyncAfter(deadline: .now(), execute: hideVolumeControlTask!)
-    } else if isMouse {
-      // if it's a mouse, simply show popover then hide after a while when user stops scrolling
-      showVolumePopover(animated: false)
-      let timeout = Preference.double(for: .osdAutoHideTimeout)
-      DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: hideVolumeControlTask!)
     }
   }
 
