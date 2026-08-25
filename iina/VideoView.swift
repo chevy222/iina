@@ -106,10 +106,6 @@ class VideoView: NSView {
     // do nothing
   }
 
-  override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
-    return Preference.bool(for: .videoViewAcceptsFirstMouse)
-  }
-
   /// Workaround for issue #4183, Cursor remains visible after resuming playback with the touchpad using secondary click
   ///
   /// See `MainWindowController.workaroundCursorDefect` and the issue for details on this workaround.

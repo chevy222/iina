@@ -280,14 +280,7 @@ struct Preference {
     /** (1~4) */
     static let volumeScrollAmount = Key("volumeScrollAmount")
     static let playbackSpeedScrollAmount = Key("playbackSpeedScrollAmount")
-    static let verticalScrollAction = Key("verticalScrollAction")
-    static let horizontalScrollAction = Key("horizontalScrollAction")
 
-    static let videoViewAcceptsFirstMouse = Key("videoViewAcceptsFirstMouse")
-    static let singleClickAction = Key("singleClickAction")
-    static let doubleClickAction = Key("doubleClickAction")
-    static let rightClickAction = Key("rightClickAction")
-    static let middleClickAction = Key("middleClickAction")
     static let pinchAction = Key("pinchAction")
     static let forceTouchAction = Key("forceTouchAction")
 
@@ -502,29 +495,6 @@ struct Preference {
       case .togglePIP: "togglePIP"
       case .abLoop: "abLoop"
       case .resetSpeed: "resetSpeed"
-      }
-    }
-  }
-
-  enum ScrollAction: Int, InitializingFromKey, CaseIterable {
-    case volume = 0
-    case seek = 1
-    case none = 2
-    // case passToMpv = 3
-    case playbackSpeed = 4
-
-    static var defaultValue = ScrollAction.volume
-
-    init?(key: Key) {
-      self.init(rawValue: Preference.integer(for: key))
-    }
-
-    var description: String {
-      switch self {
-      case .volume: "volume"
-      case .seek: "seek"
-      case .none: "none"
-      case .playbackSpeed: "playbackSpeed"
       }
     }
   }
@@ -1216,13 +1186,6 @@ struct Preference {
     .relativeSeekAmount: 3,
     .volumeScrollAmount: 3,
     .playbackSpeedScrollAmount: 3,
-    .verticalScrollAction: ScrollAction.volume.rawValue,
-    .horizontalScrollAction: ScrollAction.seek.rawValue,
-    .videoViewAcceptsFirstMouse: false,
-    .singleClickAction: MouseClickAction.hideOSC.rawValue,
-    .doubleClickAction: MouseClickAction.fullscreen.rawValue,
-    .rightClickAction: MouseClickAction.pause.rawValue,
-    .middleClickAction: MouseClickAction.none.rawValue,
     .pinchAction: PinchAction.windowSize.rawValue,
     .forceTouchAction: MouseClickAction.none.rawValue,
 
@@ -1488,12 +1451,11 @@ struct Preference {
            .useLiquidGlassOSC,
            .useLiquidGlassOSD,
            .useLiquidGlassSidebar,
-           .useMediaKeys,
-           .useMpvOsd,
-           .usePhysicalResolution,
-           .useUserDefinedConfDir,
-           .videoViewAcceptsFirstMouse,
-           .ytdlEnabled:
+            .useMediaKeys,
+            .useMpvOsd,
+            .usePhysicalResolution,
+            .useUserDefinedConfDir,
+            .ytdlEnabled:
         guard let defaultAsBool = defaultValue as? Bool else {
           // Should not occur. Internal error.
           log("Default for \(key) is of type \(type(of: value)) and cannot be cast to Bool",
@@ -1539,11 +1501,7 @@ struct Preference {
       case .logLevel:
         defaultAsString = String(describing: Logger.Level.defaultValue)
         valueAsString = String(describing: Preference.enum(for: key) as Logger.Level)
-      case .doubleClickAction,
-           .forceTouchAction,
-           .middleClickAction,
-           .rightClickAction,
-           .singleClickAction:
+      case .forceTouchAction:
         defaultAsString = String(describing: MouseClickAction.defaultValue)
         valueAsString = String(describing: Preference.enum(for: key) as MouseClickAction)
       case .oscPosition:
@@ -1567,9 +1525,6 @@ struct Preference {
       case .screenshotFormat:
         defaultAsString = String(describing: ScreenshotFormat.defaultValue)
         valueAsString = String(describing: Preference.enum(for: key) as ScreenshotFormat)
-      case .horizontalScrollAction, .verticalScrollAction:
-        defaultAsString = String(describing: ScrollAction.defaultValue)
-        valueAsString = String(describing: Preference.enum(for: key) as ScrollAction)
       case .useExactSeek:
         defaultAsString = String(describing: SeekOption.defaultValue)
         valueAsString = String(describing: Preference.enum(for: key) as SeekOption)

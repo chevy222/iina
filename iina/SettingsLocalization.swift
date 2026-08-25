@@ -135,7 +135,6 @@ extension SettingsLocalization.Key {
 
   // Control
   static let text_Trackpad = SettingsLocalization.Key("$Trackpad")
-  static let text_Mouse = SettingsLocalization.Key("$Mouse")
 
   // Key Bindings
   static let text_ImportAnExistingConfigFile = SettingsLocalization.Key("$ImportAnExistingConfigFile")

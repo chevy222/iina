@@ -301,14 +301,6 @@ class MainWindowController: PlayerWindowController {
       if let newValue = change[.newKey] as? Bool {
         (playSlider.cell as! PlaySliderCell).drawChapters = newValue
       }
-    case PK.verticalScrollAction.rawValue:
-      if let newValue = change[.newKey] as? Int {
-        verticalScrollAction = Preference.ScrollAction(rawValue: newValue)!
-      }
-    case PK.horizontalScrollAction.rawValue:
-      if let newValue = change[.newKey] as? Int {
-        horizontalScrollAction = Preference.ScrollAction(rawValue: newValue)!
-      }
     case PK.arrowButtonAction.rawValue:
       if let newValue = change[.newKey] as? Int {
         arrowBtnFunction = Preference.ArrowButtonAction(rawValue: newValue)!
@@ -1225,7 +1217,6 @@ class MainWindowController: PlayerWindowController {
       log("No data for tracking area", level: .warning)
       return
     }
-    mouseExitEnterCount += 1
     if obj == 0 {
       // main window
       isMouseInWindow = true
@@ -1244,7 +1235,6 @@ class MainWindowController: PlayerWindowController {
       log("No data for tracking area", level: .warning)
       return
     }
-    mouseExitEnterCount += 1
     if obj == 0 {
       // main window
       isMouseInWindow = false
