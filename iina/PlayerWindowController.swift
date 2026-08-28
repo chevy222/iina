@@ -42,7 +42,6 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
   internal lazy var useExactSeek: Preference.SeekOption = Preference.enum(for: .useExactSeek)
   internal lazy var relativeSeekAmount: Int = Preference.integer(for: .relativeSeekAmount)
   internal lazy var volumeScrollAmount: Int = Preference.integer(for: .volumeScrollAmount)
-  internal lazy var playbackSpeedScrollAmount: Int = Preference.integer(for: .playbackSpeedScrollAmount)
 
   internal var observedPrefKeys: [Preference.Key] = [
     .enableToneMapping,
@@ -56,7 +55,6 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     .useExactSeek,
     .relativeSeekAmount,
     .volumeScrollAmount,
-    .playbackSpeedScrollAmount,
     .playlistShowMetadata,
     .playlistShowMetadataInMusicMode,
     .autoSwitchToMusicMode,
@@ -103,10 +101,6 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
     case PK.volumeScrollAmount.rawValue:
       if let newValue = change[.newKey] as? Int {
         volumeScrollAmount = newValue.clamped(to: 1...4)
-      }
-    case PK.playbackSpeedScrollAmount.rawValue:
-      if let newValue = change[.newKey] as? Int {
-        playbackSpeedScrollAmount = newValue.clamped(to: 1...4)
       }
     case PK.autoSwitchToMusicMode.rawValue:
       player.overrideAutoSwitchToMusicMode = false
@@ -520,6 +514,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
       }
     } else if isTrackpadEnd {
       scrollDirection = nil
+      wheelDeltaAccumulation.removeAll()
     }
 
     guard let scrollDirection else { return }

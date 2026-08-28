@@ -279,7 +279,6 @@ struct Preference {
     static let arrowButtonAction = Key("arrowBtnAction")
     /** (1~4) */
     static let volumeScrollAmount = Key("volumeScrollAmount")
-    static let playbackSpeedScrollAmount = Key("playbackSpeedScrollAmount")
 
     static let pinchAction = Key("pinchAction")
     static let forceTouchAction = Key("forceTouchAction")
@@ -1185,7 +1184,6 @@ struct Preference {
     .followGlobalSeekTypeWhenAdjustSlider: false,
     .relativeSeekAmount: 3,
     .volumeScrollAmount: 3,
-    .playbackSpeedScrollAmount: 3,
     .pinchAction: PinchAction.windowSize.rawValue,
     .forceTouchAction: MouseClickAction.none.rawValue,
 
